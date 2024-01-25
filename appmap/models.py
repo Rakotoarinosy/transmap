@@ -1,6 +1,13 @@
 from django.db import models
 
 # Create your models here.
-class Itineraire(models.Model):
-    point_depart = models.CharField(max_length=100)
-    point_arrivee = models.CharField(max_length=100)
+class Bus(models.Model):
+    nom = models.CharField(max_length=30)
+    
+class Coordonnee(models.Model):
+    longitude = models.FloatField()
+    latitude = models.FloatField()
+    
+class chemin(models.Model):
+    idBus = models.ForeignKey(Bus, verbose_name=("relation bus"), on_delete=models.SET_NULL, null=True)
+    idCor = models.ForeignKey(Coordonnee, verbose_name=("relation coordonnee"), on_delete=models.SET_NULL, null=True)
