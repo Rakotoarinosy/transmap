@@ -4,7 +4,7 @@ from django.http import HttpResponse
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import Coordonnee  # Remplacez 'VotreModele' par le nom de votre modèle
-from .serializers import BusSerializer, CoordonneeSerializer
+from .serializers import BusSerializer, CheminSerialiser, CoordonneeSerializer
 
 
 @api_view(['GET'])
@@ -47,3 +47,26 @@ def insertBus(request):
             return Response({'error': str(e)}, status=500)
     else:
         return Response({'message': 'Méthode non autorisée'}, status=405)
+    
+@api_view(['GET'])
+def insertChemin(request):
+    coordonnees = Coordonnee.objects.all()
+    serialized_coordonnees = CoordonneeSerializer(coordonnees, many=True)  # Sérialisez toutes les instances
+    
+    for coordonnee in serialized_coordonnees.data:
+        coordonnee_id = coordonnee['id']
+        print("ID:", coordonnee_id)
+        data = {
+            "idBus": 1,
+            "idCor": coordonnee_id
+        }
+        try:
+            serializer = CheminSerialiser(data=data)
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                return Response({'errors': serializer.errors}, status=400)
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+
+    return Response({'message': 'Données insérées avec succès'}, status=201)
