@@ -3,7 +3,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import Coordonnee  # Remplacez 'VotreModele' par le nom de votre modèle
+from .models import Coordonnee, chemin, Bus  # Remplacez 'VotreModele' par le nom de votre modèle
 from .serializers import BusSerializer, CheminSerialiser, CoordonneeSerializer
 
 
@@ -70,3 +70,42 @@ def insertChemin(request):
             return Response({'error': str(e)}, status=500)
 
     return Response({'message': 'Données insérées avec succès'}, status=201)
+
+@api_view(['POST'])
+def rechercheBus(request):
+    if request.method == 'POST':
+        data = request.data.get('coordonne')
+        print(data)
+        cords=[]
+        busTest = []
+        errors = []
+        for value in data:
+            coordonnees = Coordonnee.objects.all()
+            serialized_coordonnees = CoordonneeSerializer(coordonnees, many=True)  # Sérialisez toutes les instances
+
+            for coordonnee in serialized_coordonnees.data:
+                if coordonnee['latitude'] == value['latitude'] and coordonnee['longitude'] == value['longitude']:
+                    cords.append(coordonnee['id'])
+                    print(cords)
+
+            if errors:
+                return Response({'errors': errors}, status=400)
+        for cord in cords:
+            chemins = chemin.objects.all()
+            serialized_chemins = CheminSerialiser(chemins, many=True)
+            for chem in serialized_chemins.data:
+                if chem['idCor'] == cord:
+                    busTest.append(chem['idBus'])
+                  
+        print(cords)
+        for busT in busTest:
+            buss = Bus.objects.all()
+            serialized_buss = BusSerializer(buss, many=True)  # 
+            for bus in serialized_buss.data:
+                if bus['id'] == busT:
+                    print({'message': bus['nom']})
+                    return Response({'message': bus['nom']})
+                    
+        
+    else:
+            return Response({'message': 'Méthode non autorisée'}, status=405)
