@@ -79,6 +79,8 @@ def rechercheBus(request):
         cords=[]
         busTest = []
         errors = []
+        tabBusRep=[]
+        busRep=""
         for value in data:
             coordonnees = Coordonnee.objects.all()
             serialized_coordonnees = CoordonneeSerializer(coordonnees, many=True)  # Sérialisez toutes les instances
@@ -86,8 +88,6 @@ def rechercheBus(request):
             for coordonnee in serialized_coordonnees.data:
                 if coordonnee['latitude'] == value['latitude'] and coordonnee['longitude'] == value['longitude']:
                     cords.append(coordonnee['id'])
-                    print(cords)
-
             if errors:
                 return Response({'errors': errors}, status=400)
         for cord in cords:
@@ -98,14 +98,32 @@ def rechercheBus(request):
                     busTest.append(chem['idBus'])
                   
         print(cords)
+        # Maka anarana bus
         for busT in busTest:
             buss = Bus.objects.all()
             serialized_buss = BusSerializer(buss, many=True)  # 
             for bus in serialized_buss.data:
-                if bus['id'] == busT:
-                    print({'message': bus['nom']})
-                    return Response({'message': bus['nom']})
-                    
+                if bus['id'] == busT:         
+                                 
+                    if len(tabBusRep) != 0:
+                        isExist=False
+                        for buse in tabBusRep:
+                            if(bus['nom'] == buse):              #Izay miverina in-2 no sady nandalo depart no nandalo arrivee
+                                busRep=busRep+buse+","
+                                isExist=True
+                            
+                        if isExist==False :
+                            tabBusRep.append(bus['nom'])
+                    else:
+                        tabBusRep.append(bus['nom'])
+
+        print(tabBusRep)
         
+        if busRep != "":
+            print({'message': busRep})
+            return Response({'message': busRep})
+        else:
+            print({'message': "Aucun bus"})
+            return Response({'message': "Aucun bus"})
     else:
             return Response({'message': 'Méthode non autorisée'}, status=405)
