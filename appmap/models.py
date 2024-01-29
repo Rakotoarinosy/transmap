@@ -5,9 +5,12 @@ class Bus(models.Model):
     nom = models.CharField(max_length=30)
     
 class Coordonnee(models.Model):
-    arret = models.CharField(max_length=250)
+    label = models.CharField(max_length=250)
     longitude = models.FloatField()
     latitude = models.FloatField()
+    
+    def __str__(self) -> str:
+        return self.label
     
 class chemin(models.Model):
     idBus = models.ForeignKey(Bus, verbose_name=("relation bus"), on_delete=models.SET_NULL, null=True)

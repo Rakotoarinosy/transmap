@@ -128,44 +128,65 @@ def rechercheBus(request):
     else:
             return Response({'message': 'Méthode non autorisée'}, status=405)
         
-"""  
+"""
 @api_view(['POST'])
 def rechercheBus(request):
     if request.method == 'POST':
-        # Supposons que "exemple" soit la valeur que vous souhaitez filtrer
-        valeur_arret = "Mahamasina"
+        # Supposons que vous recevez les points de départ et d'arrivée depuis la requête POST
+        depart = request.data.get('depart', None)
+        arriver = request.data.get('arrive', None)
+        
+        depart = depart.lower()
+        arriver= arriver.lower()
+        
+        if depart is None or arriver is None:
+            return Response({'message': 'Veuillez fournir un point de départ et un point d\'arrivée'})
 
-        # Effectuer la requête pour récupérer les coordonnées correspondantes
-        coord_list = Coordonnee.objects.filter(arret=valeur_arret)
+        # Effectuer la requête pour récupérer les coordonnées correspondantes pour le départ et l'arrivée
+        coord_depart = Coordonnee.objects.filter(label=depart).first()
+        coord_arriver = Coordonnee.objects.filter(label=arriver).first()
+
+        if coord_depart is None or coord_arriver is None:
+            return Response({'message': 'Impossible de trouver les coordonnées pour le point de départ ou le point d\'arrivée'})
 
         # Initialiser une liste pour stocker les informations des bus correspondants
         bus_info_list = []
+        bus_noms = []
 
-        # Parcourir chaque coordonnée
-        for coord in coord_list:
-            # Récupérer le chemin correspondant à la coordonnée
-            chem = chemin.objects.filter(idCor=coord).first()
+        # Récupérer les chemins possibles entre le point de départ et le point d'arrivée
+        chemins = chemin.objects.filter(idCor=coord_depart) and chemin.objects.filter(idCor=coord_arriver)
+
+        print('Chemins :', chemins)
+        
+        # Parcourir chaque chemin
+        for chem in chemins:
+            # Récupérer le bus correspondant au chemin
+            bus_correspondant = chem.idBus
+
+            if bus_correspondant:
+                # Ajouter les informations du bus à la liste
+                bus_info_list.append({
+                    'arret_depart': coord_depart.label,
+                    'arret_arriver': coord_arriver.label,
+                    'bus_nom': bus_correspondant.nom,
+                    'latitude_depart': coord_depart.latitude,
+                    'longitude_depart': coord_depart.longitude,
+                    'latitude_arriver': coord_arriver.latitude,
+                    'longitude_arriver': coord_arriver.longitude
+                })
+
+        bus_noms.clear()
+        # Parcourir chaque dictionnaire dans la liste
+        for bus_info in bus_info_list:
+            # Extraire la valeur associée à la clé 'bus_nom'
+            bus_nom = bus_info['bus_nom']
+            # Ajouter la valeur extraite à la liste bus_noms
+            bus_noms.append(bus_nom)
+
+        # Afficher la liste des valeurs de bus_nom
+        print(bus_noms)
             
-            # Vérifier si le chemin existe
-            if chem:
-                # Récupérer le bus correspondant au chemin
-                bus_correspondant = chem.idBus
-                
-                if bus_correspondant:
-                    # Ajouter les informations du bus à la liste
-                    bus_info_list.append({
-                        'arret': coord.arret,
-                        'bus_nom': bus_correspondant.nom,
-                        'latitude': coord.latitude,
-                        'longitude': coord.longitude
-                    })
-                else:
-                    # Ajouter un message indiquant qu'aucun bus correspondant n'a été trouvé pour cet arrêt
-                    print("Aucun bus correspondant trouvé")
-                    bus_info_list.append({
-                        'arret': coord.arret,
-                        'message': "Aucun bus correspondant trouvé"
-                    })
-
         # Retourner la liste des informations des bus correspondants en tant que réponse
+        print(bus_info_list)
         return Response(bus_info_list)
+
