@@ -71,7 +71,7 @@ def insertChemin(request):
 
     return Response({'message': 'Données insérées avec succès'}, status=201)
 
-@api_view(['POST'])
+"""@api_view(['POST'])
 def rechercheBus(request):
     if request.method == 'POST':
         data = request.data.get('coordonne')
@@ -127,3 +127,45 @@ def rechercheBus(request):
             return Response({'message': "Aucun bus"})
     else:
             return Response({'message': 'Méthode non autorisée'}, status=405)
+        
+"""  
+@api_view(['POST'])
+def rechercheBus(request):
+    if request.method == 'POST':
+        # Supposons que "exemple" soit la valeur que vous souhaitez filtrer
+        valeur_arret = "Mahamasina"
+
+        # Effectuer la requête pour récupérer les coordonnées correspondantes
+        coord_list = Coordonnee.objects.filter(arret=valeur_arret)
+
+        # Initialiser une liste pour stocker les informations des bus correspondants
+        bus_info_list = []
+
+        # Parcourir chaque coordonnée
+        for coord in coord_list:
+            # Récupérer le chemin correspondant à la coordonnée
+            chem = chemin.objects.filter(idCor=coord).first()
+            
+            # Vérifier si le chemin existe
+            if chem:
+                # Récupérer le bus correspondant au chemin
+                bus_correspondant = chem.idBus
+                
+                if bus_correspondant:
+                    # Ajouter les informations du bus à la liste
+                    bus_info_list.append({
+                        'arret': coord.arret,
+                        'bus_nom': bus_correspondant.nom,
+                        'latitude': coord.latitude,
+                        'longitude': coord.longitude
+                    })
+                else:
+                    # Ajouter un message indiquant qu'aucun bus correspondant n'a été trouvé pour cet arrêt
+                    print("Aucun bus correspondant trouvé")
+                    bus_info_list.append({
+                        'arret': coord.arret,
+                        'message': "Aucun bus correspondant trouvé"
+                    })
+
+        # Retourner la liste des informations des bus correspondants en tant que réponse
+        return Response(bus_info_list)

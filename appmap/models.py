@@ -5,6 +5,7 @@ class Bus(models.Model):
     nom = models.CharField(max_length=30)
     
 class Coordonnee(models.Model):
+    arret = models.CharField(max_length=250)
     longitude = models.FloatField()
     latitude = models.FloatField()
     
